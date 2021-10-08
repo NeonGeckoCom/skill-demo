@@ -1,0 +1,8 @@
+skillMetadata:
+  sections:
+    - name: Demo
+      fields:
+        - name: prompt_on_start
+          type: checkbox
+          label: Offer Demo
+          value: "true"
