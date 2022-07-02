@@ -39,7 +39,7 @@ class DemoSkill(NeonSkill):
         self.register_intent_file("show_demo.intent", self.handle_show_demo)
 
         # When first run or demo prompt not dismissed, wait for load and prompt user
-        if self.settings["prompt_on_start"] and not self.server:
+        if self.settings["prompt_on_start"]:
             self.bus.once('mycroft.ready', self._show_demo_prompt)
 
     def _show_demo_prompt(self, message):
@@ -71,8 +71,6 @@ class DemoSkill(NeonSkill):
         """
         if self.neon_in_request(message):
             if request_from_mobile(message):
-                pass
-            elif self.server:
                 pass
             else:
                 self.speak_dialog("starting_demo")
