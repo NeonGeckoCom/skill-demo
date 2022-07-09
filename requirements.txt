@@ -1,1 +1,1 @@
-neon_utils>=1.0.0a1
+neon_utils>=0.5.7,<2.0.0
