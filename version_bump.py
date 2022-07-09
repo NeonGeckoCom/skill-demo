@@ -26,56 +26,29 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from neon_utils import LOG
-from neon_utils.message_utils import request_from_mobile
-from neon_utils.skills import NeonSkill
+import fileinput
+from os.path import join, dirname
 
-
-class DemoSkill(NeonSkill):
-    def __init__(self):
-        super(DemoSkill, self).__init__(name="DemoSkill")
-
-    def initialize(self):
-        self.register_intent_file("show_demo.intent", self.handle_show_demo)
-
-        # When first run or demo prompt not dismissed, wait for load and prompt user
-        if self.settings["prompt_on_start"]:
-            self.bus.once('mycroft.ready', self._show_demo_prompt)
-
-    def _show_demo_prompt(self, message):
-        """
-        Handles first run demo prompt
-        :param message: message object associated with loaded emit
-        """
-        LOG.debug("Prompting Demo!")
-        self.make_active()
-        show_demo = self.ask_yesno("ask_demo")
-        if show_demo == "yes":
-            self.handle_show_demo(message)
-            return
-        elif show_demo == "no":
-            ask_next_time = self.ask_yesno("ask_demo_next_time")
-            if ask_next_time == "yes":
-                self.speak_dialog("confirm_demo_enabled")
-                self.update_skill_settings({"prompt_on_start": True})
-                return
-            self.speak_dialog("confirm_demo_disabled")
-        else:
-            self.speak_dialog("confirm_demo_disabled")
-        self.update_skill_settings({"prompt_on_start": False})
-
-    def handle_show_demo(self, message):
-        """
-        Starts the demoNeon shell script
-        :param message: message object associated with request
-        """
-        if self.neon_in_request(message):
-            if request_from_mobile(message):
-                pass
+with open(join(dirname(__file__), "version.py"), "r", encoding="utf-8") as v:
+    for line in v.readlines():
+        if line.startswith("__version__"):
+            if '"' in line:
+                version = line.split('"')[1]
             else:
-                self.speak_dialog("starting_demo")
-                # TODO: Make a new demo or find the old one DM
+                version = line.split("'")[1]
 
+if "a" not in version:
+    parts = version.split('.')
+    parts[-1] = str(int(parts[-1]) + 1)
+    version = '.'.join(parts)
+    version = f"{version}a0"
+else:
+    post = version.split("a")[1]
+    new_post = int(post) + 1
+    version = version.replace(f"a{post}", f"a{new_post}")
 
-def create_skill():
-    return DemoSkill()
+for line in fileinput.input(join(dirname(__file__), "version.py"), inplace=True):
+    if line.startswith("__version__"):
+        print(f"__version__ = \"{version}\"")
+    else:
+        print(line.rstrip('\n'))
