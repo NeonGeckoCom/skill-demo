@@ -25,20 +25,22 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from copy import deepcopy
 from tempfile import mkstemp
 from threading import Event
+from time import sleep
 from typing import Optional
-
-from mycroft.util import play_audio_file
 from mycroft_bus_client import Message
 from neon_utils import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message
+from neon_utils.signal_utils import wait_for_signal_clear
 from neon_utils.skills import NeonSkill
 from neon_utils.user_utils import get_user_prefs
+from ovos_plugin_manager.templates import TTS
+from ovos_utils.sound import play_wav
 
 from mycroft.skills import intent_file_handler
-from ovos_plugin_manager.templates import TTS
 
 
 class DemoSkill(NeonSkill):
@@ -46,6 +48,8 @@ class DemoSkill(NeonSkill):
         super(DemoSkill, self).__init__(name="DemoSkill")
         self._active_demos = dict()
         self._speak_timeout = 15
+        self._handler_timeout = 10
+        self._audio_output_done = Event()
 
     @property
     def demo_tts_plugin(self) -> str:
@@ -60,6 +64,14 @@ class DemoSkill(NeonSkill):
         # When demo prompt enabled, wait for load and prompt user
         if self.settings["prompt_on_start"]:
             self.bus.once('mycroft.ready', self._show_demo_prompt)
+        self.add_event("recognizer_loop:audio_output_start", self._audio_started)
+        self.add_event("recognizer_loop:audio_output_end", self._audio_stopped)
+
+    def _audio_started(self, _):
+        self._audio_output_done.clear()
+
+    def _audio_stopped(self, _):
+        self._audio_output_done.set()
 
     def _show_demo_prompt(self, message):
         """
@@ -103,6 +115,7 @@ class DemoSkill(NeonSkill):
         profile['user']['username'] = 'demo'
         profile['units']['measure'] = 'imperial'
         # Confirm demo is starting
+        self._audio_output_done.clear()  # Clear signal to wait for intro speak
         self.speak_dialog("starting_demo")
         # Read the demo prompts
         demo_file = self.find_resource("demo.txt")
@@ -115,6 +128,8 @@ class DemoSkill(NeonSkill):
             "user_profiles": [profile],
             "source": ["demo"]
         }
+        # Define a message that will be updated with any profile changes
+        message = Message("recognizer_loop:utterance", context=message_context)
         prompter = {"name": "Demo",
                     "language": lang,
                     "gender": "female" if profile['speech'].get('tts_gender')
@@ -124,12 +139,17 @@ class DemoSkill(NeonSkill):
         # Iterate over demo prompts until done or user says 'stop'
         for prompt in demo_prompts:
             if self._active_demos[user].is_set():
+                # Check to stop before speaking the prompt
                 break
             self._speak_prompt(prompt, prompter, tts)
-            self._send_prompt(Message("recognizer_loop:utterance",
-                                      {"lang": lang,
-                                       "utterances": [prompt.lower()]},
-                                      message_context))
+            if self._active_demos[user].is_set():
+                # Check to stop before executing the prompt
+                break
+            LOG.info(message.context['user_profiles'][0]['units']['measure'])
+            message.data = {"lang": lang,
+                            "utterances": [prompt.lower()]}
+            self._send_prompt(message)
+
         self.speak_dialog("finished_demo")
         self._active_demos.pop(user)
 
@@ -138,12 +158,21 @@ class DemoSkill(NeonSkill):
         Send a message to skill processing and wait for it to be handled
         :param message: Message to emit to skills
         """
-        # Wait longer for weather skill which waits for speech for some reason
+        self._audio_output_done.clear()  # Clear to wait for this response
         resp = self.bus.wait_for_response(message,
-                                          "mycroft.skill.handler.complete", 30)
-        LOG.info(resp)
-        self.bus.wait_for_message("recognizer_loop:audio_output_end",
-                                  self._speak_timeout)
+                                          "mycroft.skill.handler.complete",
+                                          self._handler_timeout)
+        if not resp:
+            LOG.error(f"Handler not completed for: "
+                      f"{message.data.get('utterances')}")
+        else:
+            message.context['user_profiles'] = resp.context['user_profiles']
+        if not self._audio_output_done.wait(self._speak_timeout):
+            LOG.error(f"Timed out waiting")
+        else:
+            sleep(0.5)
+            # Wait for anything not yet in the audio queue
+            wait_for_signal_clear("isSpeaking", self._speak_timeout)
 
     def _speak_prompt(self, prompt: str, prompter: dict, tts: Optional[TTS]):
         """
@@ -151,17 +180,19 @@ class DemoSkill(NeonSkill):
         :param prompt: User request to speak that will be emitted to skills
         :param prompter: Speaker config to use for spoken prompts
         """
+        self._audio_output_done.wait(self._speak_timeout)
         if tts:
             # If available, use skill-managed TTS
             _, output_file = mkstemp()
             wav_file, _ = tts.get_tts(prompt, output_file)
             # TODO: If server, self.send_with_audio
-            play_audio_file(wav_file).wait(self._speak_timeout)
+            play_wav(wav_file,
+                     self.config_core.get("play_wav_cmdline")).wait(
+                self._speak_timeout)
         else:
             # Else fallback to audio module (probably same voice
             self.speak(prompt, speaker=prompter)
-            self.bus.wait_for_message("recognizer_loop:audio_output_end",
-                                      self._speak_timeout)
+            self._audio_output_done.wait(self._speak_timeout)
 
     def _get_demo_tts(self, lang: str = None) -> Optional[TTS]:
         """
