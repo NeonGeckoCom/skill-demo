@@ -25,20 +25,26 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from copy import deepcopy
+from threading import Event
 
+from mycroft_bus_client import Message
 from neon_utils import LOG
-from neon_utils.message_utils import request_from_mobile
+from neon_utils.message_utils import get_message_user, dig_for_message
 from neon_utils.skills import NeonSkill
+from neon_utils.user_utils import get_user_prefs
+
+from mycroft.skills import intent_file_handler
 
 
 class DemoSkill(NeonSkill):
     def __init__(self):
         super(DemoSkill, self).__init__(name="DemoSkill")
+        self._active_demos = dict()
+        self._speak_timeout = 15
 
     def initialize(self):
-        self.register_intent_file("show_demo.intent", self.handle_show_demo)
-
-        # When first run or demo prompt not dismissed, wait for load and prompt user
+        # When demo prompt enabled, wait for load and prompt user
         if self.settings["prompt_on_start"]:
             self.bus.once('mycroft.ready', self._show_demo_prompt)
 
@@ -51,6 +57,8 @@ class DemoSkill(NeonSkill):
         self.make_active()
         show_demo = self.ask_yesno("ask_demo")
         if show_demo == "yes":
+            message.context['neon_should_respond'] = True
+            message.context['username'] = 'local'
             self.handle_show_demo(message)
             return
         elif show_demo == "no":
@@ -64,17 +72,79 @@ class DemoSkill(NeonSkill):
             self.speak_dialog("confirm_demo_disabled")
         self.update_skill_settings({"prompt_on_start": False})
 
+    @intent_file_handler("show_demo.intent")
     def handle_show_demo(self, message):
         """
-        Starts the demoNeon shell script
+        Starts a brief demo
         :param message: message object associated with request
         """
-        if self.neon_in_request(message):
-            if request_from_mobile(message):
-                pass
-            else:
-                self.speak_dialog("starting_demo")
-                # TODO: Make a new demo or find the old one DM
+        if not self.neon_in_request(message):
+            return
+        # TODO: Parse demo language from request
+        lang = self.lang
+        # Track demo state for the user
+        user = get_message_user(message)
+        self._active_demos[user] = Event()
+        # Define a demo profile so user profile isn't modified
+        profile = deepcopy(get_user_prefs(message))
+        profile['user']['username'] = 'demo'
+        profile['units']['measure'] = 'imperial'
+        # Confirm demo is starting
+        self.speak_dialog("starting_demo")
+        # Read the demo prompts
+        demo_file = self.find_resource("demo.txt")
+        with open(demo_file) as f:
+            demo_prompts = f.read().split('\n')
+        # Define message context for the 'demo' user
+        message_context = {
+            "neon_should_respond": True,
+            "username": "demo",
+            "user_profiles": [profile],
+            "source": ["demo"]
+        }
+        prompter = {"name": "Demo",
+                    "language": lang,
+                    "use_fallback_tts": True,
+                    "gender": "female" if profile['speech'].get('tts_gender')
+                            == "male" else "female"}
+        # Iterate over demo prompts until done or user says 'stop'
+        for prompt in demo_prompts:
+            if self._active_demos[user].is_set():
+                break
+            self._speak_prompt(prompt, prompter)
+            self._send_prompt(Message("recognizer_loop:utterance",
+                                      {"lang": lang,
+                                       "utterances": [prompt.lower()]},
+                                      message_context))
+        self.speak_dialog("finished_demo")
+        self._active_demos.pop(user)
+
+    def _send_prompt(self, message: Message):
+        """
+        Send a message to skill processing and wait for it to be handled
+        :param message: Message to emit to skills
+        """
+        resp = self.bus.wait_for_response(message,
+                                          "mycroft.skill.handler.complete", 10)
+        LOG.info(resp)
+        self.bus.wait_for_message("recognizer_loop:audio_output_end",
+                                  self._speak_timeout)
+
+    def _speak_prompt(self, prompt: str, prompter: dict):
+        """
+        Speak the prompt in a user's voice and wait for playback to end
+        :param prompt: User request to speak that will be emitted to skills
+        :param prompter: Speaker config to use for spoken prompts
+        """
+        self.speak(prompt, speaker=prompter)
+        self.bus.wait_for_message("recognizer_loop:audio_output_end",
+                                  self._speak_timeout)
+
+    def stop(self):
+        user = get_message_user(dig_for_message())
+        if user in self._active_demos:
+            LOG.info(f"{user} requested stop")
+            self._active_demos[user].set()
 
 
 def create_skill():
