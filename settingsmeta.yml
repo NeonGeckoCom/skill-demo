@@ -6,3 +6,7 @@ skillMetadata:
           type: checkbox
           label: Offer Demo
           value: "true"
+        - name: demo_tts_engine
+          type: text
+          label: Demo User TTS Plugin
+          value: ""

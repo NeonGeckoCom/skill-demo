@@ -26,8 +26,11 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from copy import deepcopy
+from tempfile import mkstemp
 from threading import Event
+from typing import Optional
 
+from mycroft.util import play_audio_file
 from mycroft_bus_client import Message
 from neon_utils import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message
@@ -35,6 +38,7 @@ from neon_utils.skills import NeonSkill
 from neon_utils.user_utils import get_user_prefs
 
 from mycroft.skills import intent_file_handler
+from ovos_plugin_manager.templates import TTS
 
 
 class DemoSkill(NeonSkill):
@@ -42,6 +46,15 @@ class DemoSkill(NeonSkill):
         super(DemoSkill, self).__init__(name="DemoSkill")
         self._active_demos = dict()
         self._speak_timeout = 15
+
+    @property
+    def demo_tts_plugin(self) -> str:
+        """
+        Get the TTS engine spec to use for the demo user
+        """
+        return self.settings.get("demo_tts_engine") or \
+            self.config_core["tts"].get("fallback_module") or \
+            "ovos-tts-plugin-mimic"
 
     def initialize(self):
         # When demo prompt enabled, wait for load and prompt user
@@ -104,14 +117,15 @@ class DemoSkill(NeonSkill):
         }
         prompter = {"name": "Demo",
                     "language": lang,
-                    "use_fallback_tts": True,
                     "gender": "female" if profile['speech'].get('tts_gender')
                             == "male" else "female"}
+        # Initialize the demo TTS
+        tts = self._get_demo_tts()
         # Iterate over demo prompts until done or user says 'stop'
         for prompt in demo_prompts:
             if self._active_demos[user].is_set():
                 break
-            self._speak_prompt(prompt, prompter)
+            self._speak_prompt(prompt, prompter, tts)
             self._send_prompt(Message("recognizer_loop:utterance",
                                       {"lang": lang,
                                        "utterances": [prompt.lower()]},
@@ -124,21 +138,53 @@ class DemoSkill(NeonSkill):
         Send a message to skill processing and wait for it to be handled
         :param message: Message to emit to skills
         """
+        # Wait longer for weather skill which waits for speech for some reason
         resp = self.bus.wait_for_response(message,
-                                          "mycroft.skill.handler.complete", 10)
+                                          "mycroft.skill.handler.complete", 30)
         LOG.info(resp)
         self.bus.wait_for_message("recognizer_loop:audio_output_end",
                                   self._speak_timeout)
 
-    def _speak_prompt(self, prompt: str, prompter: dict):
+    def _speak_prompt(self, prompt: str, prompter: dict, tts: Optional[TTS]):
         """
         Speak the prompt in a user's voice and wait for playback to end
         :param prompt: User request to speak that will be emitted to skills
         :param prompter: Speaker config to use for spoken prompts
         """
-        self.speak(prompt, speaker=prompter)
-        self.bus.wait_for_message("recognizer_loop:audio_output_end",
-                                  self._speak_timeout)
+        if tts:
+            # If available, use skill-managed TTS
+            _, output_file = mkstemp()
+            wav_file, _ = tts.get_tts(prompt, output_file)
+            # TODO: If server, self.send_with_audio
+            play_audio_file(wav_file).wait(self._speak_timeout)
+        else:
+            # Else fallback to audio module (probably same voice
+            self.speak(prompt, speaker=prompter)
+            self.bus.wait_for_message("recognizer_loop:audio_output_end",
+                                      self._speak_timeout)
+
+    def _get_demo_tts(self, lang: str = None) -> Optional[TTS]:
+        """
+        Create a TTS plugin instance to
+        """
+        from ovos_plugin_manager.tts import OVOSTTSFactory
+        engine = self.demo_tts_plugin
+        lang = lang or self.lang
+        config = {"module": engine,
+                  "lang": lang}
+        try:
+            return OVOSTTSFactory.create(config)
+        except Exception as e:
+            LOG.error(f"Failed to load TTS Plugin: {self.demo_tts_plugin}")
+            LOG.error(e)
+        try:
+            LOG.info("Trying with configured fallback_module")
+            config['module'] = self.config_core["tts"].get("fallback_module")
+            return OVOSTTSFactory.create(config)
+        except Exception as e:
+            LOG.error(f"Failed to load TTS Plugin: {self.demo_tts_plugin}")
+            LOG.error(e)
+        return None
 
     def stop(self):
         user = get_message_user(dig_for_message())
