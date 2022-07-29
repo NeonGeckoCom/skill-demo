@@ -150,7 +150,8 @@ class TestSkill(unittest.TestCase):
         default_handle_show_demo = self.skill.handle_show_demo
         self.skill.handle_show_demo = Mock()
 
-        message = Message("mycroft.ready", context={"neon_should_respond": True})
+        message = Message("mycroft.ready",
+                          context={"neon_should_respond": True})
         self.skill._show_demo_prompt(message)
         self.skill.handle_show_demo.assert_called_with(message)
         self.assertFalse(self.skill.settings["prompt_on_start"])
@@ -159,8 +160,15 @@ class TestSkill(unittest.TestCase):
         self.skill.handle_show_demo = default_handle_show_demo
 
     def test_show_demo_valid(self):
-        self.skill.handle_show_demo(Message("recognizer_loop:utterance", context={"neon_should_respond": True}))
-        self.skill.speak_dialog.assert_called_with("starting_demo")
+        self.skill._speak_prompt = Mock()
+        self.skill._send_prompt = Mock()
+        self.skill.handle_show_demo(Message("recognizer_loop:utterance",
+                                            context={
+                                                "neon_should_respond": True}))
+        self.skill.speak_dialog.assert_any_call("starting_demo")
+        self.skill.speak_dialog.assert_called_with("finished_demo")
+
+    # TODO: Implement tests for _get_demo_tts, _send_prompt, and _speak_prompt
 
 
 if __name__ == '__main__':
