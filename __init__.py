@@ -64,7 +64,8 @@ class DemoSkill(NeonSkill):
         # When demo prompt enabled, wait for load and prompt user
         if self.settings["prompt_on_start"]:
             self.bus.once('mycroft.ready', self._show_demo_prompt)
-        self.add_event("recognizer_loop:audio_output_start", self._audio_started)
+        self.add_event("recognizer_loop:audio_output_start",
+                       self._audio_started)
         self.add_event("recognizer_loop:audio_output_end", self._audio_stopped)
 
     def _audio_started(self, _):
