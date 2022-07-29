@@ -159,8 +159,12 @@ class TestSkill(unittest.TestCase):
         self.skill.handle_show_demo = default_handle_show_demo
 
     def test_show_demo_valid(self):
-        self.skill.handle_show_demo(Message("recognizer_loop:utterance", context={"neon_should_respond": True}))
-        self.skill.speak_dialog.assert_called_with("starting_demo")
+        self.skill._speak_prompt = Mock()
+        self.skill._send_prompt = Mock()
+        self.skill.handle_show_demo(Message("recognizer_loop:utterance",
+                                            context={"neon_should_respond": True}))
+        self.skill.speak_dialog.assert_any_call("starting_demo")
+        self.skill.speak_dialog.assert_called_with("finished_demo")
 
 
 if __name__ == '__main__':
