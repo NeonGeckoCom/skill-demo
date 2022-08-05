@@ -37,6 +37,7 @@ from neon_utils.message_utils import get_message_user, dig_for_message
 from neon_utils.signal_utils import wait_for_signal_clear
 from neon_utils.skills import NeonSkill
 from neon_utils.user_utils import get_user_prefs
+from neon_utils.file_utils import load_commented_file
 from ovos_plugin_manager.templates import TTS
 from ovos_utils.sound import play_wav
 
@@ -62,7 +63,7 @@ class DemoSkill(NeonSkill):
 
     def initialize(self):
         # When demo prompt enabled, wait for load and prompt user
-        if self.settings["prompt_on_start"]:
+        if self.settings.get("prompt_on_start"):
             self.bus.once('mycroft.ready', self._show_demo_prompt)
         self.add_event("recognizer_loop:audio_output_start",
                        self._audio_started)
@@ -119,16 +120,14 @@ class DemoSkill(NeonSkill):
         self._audio_output_done.clear()  # Clear signal to wait for intro speak
         self.speak_dialog("starting_demo")
         # Read the demo prompts
-        demo_file = self.find_resource("demo.txt")
-        with open(demo_file) as f:
-            demo_prompts = f.read().split('\n')
-        # Define message context for the 'demo' user
-        message_context = {
-            "neon_should_respond": True,
-            "username": "demo",
-            "user_profiles": [profile],
-            "source": ["demo"]
-        }
+        demo_prompts = load_commented_file(self.find_resource("language_demo.txt"))
+        # Define message context for the demo actions
+        message_context = deepcopy(message.context)
+        message_context['neon_should_respond'] = True
+        message_context['username'] = 'demo'
+        message_context['user_profiles'] = [profile]
+        message_context['source'] = ['demo']
+
         # Define a message that will be updated with any profile changes
         message = Message("recognizer_loop:utterance", context=message_context)
         prompter = {"name": "Demo",
