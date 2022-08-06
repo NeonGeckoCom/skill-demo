@@ -128,7 +128,7 @@ class DemoSkill(NeonSkill):
         self.speak_dialog("starting_demo")
         # Read the demo prompts
         demo_prompts = load_commented_file(self.find_resource(
-            self.demo_filename))
+            self.demo_filename)).split('\n')
         # Define message context for the demo actions
         message_context = deepcopy(message.context)
         message_context['neon_should_respond'] = True
