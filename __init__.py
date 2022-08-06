@@ -61,6 +61,13 @@ class DemoSkill(NeonSkill):
             self.config_core["tts"].get("fallback_module") or \
             "ovos-tts-plugin-mimic"
 
+    @property
+    def demo_filename(self):
+        """
+        Get the name of the demo text resource file (including extension)
+        """
+        return self.settings.get("filename") or "demo.txt"
+
     def initialize(self):
         # When demo prompt enabled, wait for load and prompt user
         if self.settings.get("prompt_on_start"):
@@ -120,7 +127,8 @@ class DemoSkill(NeonSkill):
         self._audio_output_done.clear()  # Clear signal to wait for intro speak
         self.speak_dialog("starting_demo")
         # Read the demo prompts
-        demo_prompts = load_commented_file(self.find_resource("language_demo.txt"))
+        demo_prompts = load_commented_file(self.find_resource(
+            self.demo_filename))
         # Define message context for the demo actions
         message_context = deepcopy(message.context)
         message_context['neon_should_respond'] = True
