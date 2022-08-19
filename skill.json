@@ -12,7 +12,7 @@
     "systemDeps": false,
     "requirements": {
         "python": [
-            "neon-utils>=0.5.7"
+            "neon_utils>=0.5.7,<2.0.0"
         ],
         "system": {},
         "skill": []
@@ -26,18 +26,22 @@
         "arm"
     ],
     "branch": "master",
-    "license": "NeonAI License v1.0",
+    "license": "BSD-3-Clause",
     "icon": "https://0000.us/klatchat/app/files/neon_images/icons/neon_skill.png",
     "category": "Information",
     "categories": [
         "Information"
     ],
     "tags": [
-        "NeonGecko",
+        "NeonGecko Original",
         "NeonAI",
         "Demo"
     ],
-    "skillname": "Demo",
+    "credits": [
+        "NeonDaniel",
+        "NeonGeckoCom"
+    ],
+    "skillname": "skill-demo",
     "authorname": "NeonGeckoCom",
     "foldername": null
 }
