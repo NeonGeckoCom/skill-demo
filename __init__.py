@@ -37,6 +37,7 @@ from neon_utils.message_utils import get_message_user, dig_for_message
 from neon_utils.signal_utils import wait_for_signal_clear
 from neon_utils.skills import NeonSkill
 from neon_utils.user_utils import get_user_prefs
+from neon_utils.file_utils import load_commented_file
 from ovos_plugin_manager.templates import TTS
 from ovos_utils.sound import play_wav
 
@@ -47,8 +48,6 @@ class DemoSkill(NeonSkill):
     def __init__(self):
         super(DemoSkill, self).__init__(name="DemoSkill")
         self._active_demos = dict()
-        self._speak_timeout = 15
-        self._handler_timeout = 10
         self._audio_output_done = Event()
 
     @property
@@ -60,9 +59,24 @@ class DemoSkill(NeonSkill):
             self.config_core["tts"].get("fallback_module") or \
             "ovos-tts-plugin-mimic"
 
+    @property
+    def speak_timeout(self):
+        return self.settings.get("speak_timeout") or self._speak_timeout
+
+    @property
+    def intent_timeout(self):
+        return self.settings.get("intent_timeout") or 10
+
+    @property
+    def demo_filename(self):
+        """
+        Get the name of the demo text resource file (including extension)
+        """
+        return self.settings.get("filename") or "demo.txt"
+
     def initialize(self):
         # When demo prompt enabled, wait for load and prompt user
-        if self.settings["prompt_on_start"]:
+        if self.settings.get("prompt_on_start"):
             self.bus.once('mycroft.ready', self._show_demo_prompt)
         self.add_event("recognizer_loop:audio_output_start",
                        self._audio_started)
@@ -119,16 +133,15 @@ class DemoSkill(NeonSkill):
         self._audio_output_done.clear()  # Clear signal to wait for intro speak
         self.speak_dialog("starting_demo")
         # Read the demo prompts
-        demo_file = self.find_resource("demo.txt")
-        with open(demo_file) as f:
-            demo_prompts = f.read().split('\n')
-        # Define message context for the 'demo' user
-        message_context = {
-            "neon_should_respond": True,
-            "username": "demo",
-            "user_profiles": [profile],
-            "source": ["demo"]
-        }
+        demo_prompts = load_commented_file(self.find_resource(
+            self.demo_filename)).split('\n')
+        # Define message context for the demo actions
+        message_context = deepcopy(message.context)
+        message_context['neon_should_respond'] = True
+        message_context['username'] = 'demo'
+        message_context['user_profiles'] = [profile]
+        message_context['source'] = ['demo']
+
         # Define a message that will be updated with any profile changes
         message = Message("recognizer_loop:utterance", context=message_context)
         prompter = {"name": "Demo",
@@ -162,18 +175,18 @@ class DemoSkill(NeonSkill):
         self._audio_output_done.clear()  # Clear to wait for this response
         resp = self.bus.wait_for_response(message,
                                           "mycroft.skill.handler.complete",
-                                          self._handler_timeout)
+                                          self.intent_timeout)
         if not resp:
             LOG.error(f"Handler not completed for: "
                       f"{message.data.get('utterances')}")
         else:
             message.context['user_profiles'] = resp.context['user_profiles']
-        if not self._audio_output_done.wait(self._speak_timeout):
+        if not self._audio_output_done.wait(self.speak_timeout):
             LOG.error(f"Timed out waiting")
         else:
             sleep(0.5)
             # Wait for anything not yet in the audio queue
-            wait_for_signal_clear("isSpeaking", self._speak_timeout)
+            wait_for_signal_clear("isSpeaking", self.speak_timeout)
 
     def _speak_prompt(self, prompt: str, prompter: dict, tts: Optional[TTS]):
         """
@@ -181,7 +194,7 @@ class DemoSkill(NeonSkill):
         :param prompt: User request to speak that will be emitted to skills
         :param prompter: Speaker config to use for spoken prompts
         """
-        self._audio_output_done.wait(self._speak_timeout)
+        self._audio_output_done.wait(self.speak_timeout)
         if tts:
             # If available, use skill-managed TTS
             _, output_file = mkstemp()
@@ -189,11 +202,11 @@ class DemoSkill(NeonSkill):
             # TODO: If server, self.send_with_audio
             play_wav(wav_file,
                      self.config_core.get("play_wav_cmdline")).wait(
-                self._speak_timeout)
+                self.speak_timeout)
         else:
             # Else fallback to audio module (probably same voice
             self.speak(prompt, speaker=prompter)
-            self._audio_output_done.wait(self._speak_timeout)
+            self._audio_output_done.wait(self.speak_timeout)
 
     def _get_demo_tts(self, lang: str = None) -> Optional[TTS]:
         """
