@@ -48,8 +48,6 @@ class DemoSkill(NeonSkill):
     def __init__(self):
         super(DemoSkill, self).__init__(name="DemoSkill")
         self._active_demos = dict()
-        self._speak_timeout = 15
-        self._handler_timeout = 10
         self._audio_output_done = Event()
 
     @property
@@ -60,6 +58,14 @@ class DemoSkill(NeonSkill):
         return self.settings.get("demo_tts_engine") or \
             self.config_core["tts"].get("fallback_module") or \
             "ovos-tts-plugin-mimic"
+
+    @property
+    def _speak_timeout(self):
+        return self.settings.get("speak_timeout") or 15
+
+    @property
+    def _intent_timeout(self):
+        return self.settings.get("intent_timeout") or 10
 
     @property
     def demo_filename(self):
@@ -169,7 +175,7 @@ class DemoSkill(NeonSkill):
         self._audio_output_done.clear()  # Clear to wait for this response
         resp = self.bus.wait_for_response(message,
                                           "mycroft.skill.handler.complete",
-                                          self._handler_timeout)
+                                          self._intent_timeout)
         if not resp:
             LOG.error(f"Handler not completed for: "
                       f"{message.data.get('utterances')}")
