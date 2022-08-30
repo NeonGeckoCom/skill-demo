@@ -166,7 +166,8 @@ class TestSkill(unittest.TestCase):
                       context={"neon_should_respond": True})
         self.skill.handle_show_demo(msg)
         self.skill.speak_dialog.assert_any_call("starting_demo")
-        self.skill.speak_dialog.assert_called_with("finished_demo", msg)
+        self.skill.speak_dialog.assert_called_with("finished_demo",
+                                                   message=msg)
 
     # TODO: Implement tests for _get_demo_tts, _send_prompt, and _speak_prompt
 
