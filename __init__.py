@@ -33,7 +33,6 @@ from threading import Event
 from time import sleep
 from typing import Optional
 
-from mycroft.skills.skill_data import find_resource
 from mycroft_bus_client import Message
 from neon_utils import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message
@@ -46,6 +45,7 @@ from ovos_plugin_manager.templates import TTS
 from ovos_utils.sound import play_wav
 
 from mycroft.skills import intent_file_handler
+from mycroft.skills.skill_data import find_resource
 
 
 class DemoSkill(NeonSkill):
@@ -53,6 +53,7 @@ class DemoSkill(NeonSkill):
         super(DemoSkill, self).__init__(name="DemoSkill")
         self._active_demos = dict()
         self._audio_output_done = Event()
+        self._data_path = get_xdg_data_save_path()
 
     @property
     def demo_tts_plugin(self) -> str:
@@ -184,9 +185,8 @@ class DemoSkill(NeonSkill):
             return expanduser(self.demo_filename)
         if self.file_system.exists(self.demo_filename):
             return join(self.file_system.path, self.demo_filename)
-        user_resource = find_resource(self.demo_filename,
-                                      join(get_xdg_data_save_path(),
-                                           "resources", self.skill_id),
+        root_dir = join(self._data_path, "resources", self.skill_id)
+        user_resource = find_resource(self.demo_filename, root_dir,
                                       None, self.lang)
         if user_resource:
             return user_resource
