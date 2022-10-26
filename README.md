@@ -11,7 +11,7 @@ be asked again on next run. The demo may also be run at any time via intent.
 
 ## Examples
 
-- "Neon show me the demo"
+- "Show me the demo."
 
 ## Contact Support
 
