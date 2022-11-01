@@ -26,11 +26,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from os.path import expanduser, isfile, join
 from copy import deepcopy
 from tempfile import mkstemp
 from threading import Event
 from time import sleep
 from typing import Optional
+
 from mycroft_bus_client import Message
 from neon_utils import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message
@@ -38,10 +40,12 @@ from neon_utils.signal_utils import wait_for_signal_clear
 from neon_utils.skills import NeonSkill
 from neon_utils.user_utils import get_user_prefs
 from neon_utils.file_utils import load_commented_file
+from ovos_config.locations import get_xdg_data_save_path
 from ovos_plugin_manager.templates import TTS
 from ovos_utils.sound import play_wav
 
 from mycroft.skills import intent_file_handler
+from mycroft.skills.skill_data import find_resource
 
 
 class DemoSkill(NeonSkill):
@@ -49,6 +53,7 @@ class DemoSkill(NeonSkill):
         super(DemoSkill, self).__init__(name="DemoSkill")
         self._active_demos = dict()
         self._audio_output_done = Event()
+        self._data_path = get_xdg_data_save_path()
 
     @property
     def demo_tts_plugin(self) -> str:
@@ -122,6 +127,7 @@ class DemoSkill(NeonSkill):
             return
         # TODO: Parse demo language from request
         lang = self.lang
+        original_message = deepcopy(message)
         # Track demo state for the user
         user = get_message_user(message)
         self._active_demos[user] = Event()
@@ -133,8 +139,7 @@ class DemoSkill(NeonSkill):
         self._audio_output_done.clear()  # Clear signal to wait for intro speak
         self.speak_dialog("starting_demo")
         # Read the demo prompts
-        demo_prompts = load_commented_file(self.find_resource(
-            self.demo_filename)).split('\n')
+        demo_prompts = load_commented_file(self._get_demo_file()).split('\n')
         # Define message context for the demo actions
         message_context = deepcopy(message.context)
         message_context['neon_should_respond'] = True
@@ -164,8 +169,30 @@ class DemoSkill(NeonSkill):
                             "utterances": [prompt.lower()]}
             self._send_prompt(message)
 
-        self.speak_dialog("finished_demo")
+        self.speak_dialog("finished_demo", message=original_message)
         self._active_demos.pop(user)
+
+    def _get_demo_file(self):
+        """
+        Helper method for resolving a skill resource file in priority order:
+        1. Absolute Path
+        2. Skill File System Path
+        3. User-defined skill resource
+            ({XDG_DATA_HOME}/resources/skill-demo.neongeckocom/{lang})
+        4. Skill resource ({skill.base_dir}/locale/{lang})
+        """
+        if isfile(expanduser(self.demo_filename)):
+            return expanduser(self.demo_filename)
+        if self.file_system.exists(self.demo_filename):
+            return join(self.file_system.path, self.demo_filename)
+        root_dir = join(self._data_path, "resources", self.skill_id)
+        user_resource = find_resource(self.demo_filename, root_dir,
+                                      None, self.lang)
+        if user_resource:
+            return user_resource
+        skill_resource = self.find_resource(self.demo_filename)
+        if skill_resource:
+            return skill_resource
 
     def _send_prompt(self, message: Message):
         """
@@ -232,8 +259,11 @@ class DemoSkill(NeonSkill):
         return None
 
     def stop(self):
-        user = get_message_user(dig_for_message())
-        if user in self._active_demos:
+        try:
+            user = get_message_user(dig_for_message())
+        except ValueError:
+            user = None
+        if user and user in self._active_demos:
             LOG.info(f"{user} requested stop")
             self._active_demos[user].set()
 

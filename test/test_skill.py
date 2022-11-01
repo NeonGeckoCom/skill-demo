@@ -162,11 +162,12 @@ class TestSkill(unittest.TestCase):
     def test_show_demo_valid(self):
         self.skill._speak_prompt = Mock()
         self.skill._send_prompt = Mock()
-        self.skill.handle_show_demo(Message("recognizer_loop:utterance",
-                                            context={
-                                                "neon_should_respond": True}))
+        msg = Message("recognizer_loop:utterance",
+                      context={"neon_should_respond": True})
+        self.skill.handle_show_demo(msg)
         self.skill.speak_dialog.assert_any_call("starting_demo")
-        self.skill.speak_dialog.assert_called_with("finished_demo")
+        args = self.skill.speak_dialog.call_args
+        self.assertEqual(args[0][0], "finished_demo")
 
     # TODO: Implement tests for _get_demo_tts, _send_prompt, and _speak_prompt
 
