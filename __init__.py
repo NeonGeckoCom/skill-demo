@@ -250,6 +250,13 @@ class DemoSkill(NeonSkill):
             LOG.error(f"Failed to load TTS Plugin: {self.demo_tts_plugin}")
             LOG.error(e)
         try:
+            LOG.info("Trying with configured tts module for audio files")
+            config['module'] = "neon-tts-plugin-audiofiles"
+            return OVOSTTSFactory.create(config)
+        except Exception as e:
+            LOG.error(f"Failed to load TTS Plugin: neon-tts-plugin-audiofiles")
+            LOG.error(e)
+        try:
             LOG.info("Trying with configured fallback_module")
             config['module'] = self.config_core["tts"].get("fallback_module")
             return OVOSTTSFactory.create(config)
