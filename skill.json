@@ -1,6 +1,6 @@
 {
     "title": "Demo",
-    "url": "https://github.com/NeonGeckoCom/skill-demo",
+    "url": "https://github.com/NeonDmitry/skill-demo",
     "summary": "Skill to demo Neon capabilities",
     "short_description": "Skill to demo Neon capabilities",
     "description": "The demo skill will prompt on first run if you'd like to see a demo. User may accept or decline and optionally choose to be asked again on next run. The demo may also be run at any time via intent.",
@@ -42,6 +42,6 @@
         "NeonGeckoCom"
     ],
     "skillname": "skill-demo",
-    "authorname": "NeonGeckoCom",
+    "authorname": "NeonDmitry",
     "foldername": null
 }
