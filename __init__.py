@@ -58,11 +58,16 @@ class DemoSkill(NeonSkill):
     @property
     def demo_tts_plugin(self) -> str:
         """
-        Get the TTS engine spec to use for the demo user
+        Get the TTS engine spec to use for the demo user.
+        TTS Engine is resolved in the order of:
+        1) demo_tts_engine in settings
+        2) audiofiles TTS engine if setting is missing/unset
+        3) configured fallback module if setting is explicitly empty
         """
-        return self.settings.get("demo_tts_engine") or \
-            self.config_core["tts"].get("fallback_module") or \
-            "ovos-tts-plugin-mimic"
+        # TODO: Add a check for plugin availability here to validate config
+        return self.settings.get("demo_tts_engine",
+                                 "neon_tts_plugin_audiofiles") or \
+            self.config_core["tts"].get("fallback_module")
 
     @property
     def speak_timeout(self):
