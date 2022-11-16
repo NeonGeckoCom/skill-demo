@@ -66,7 +66,7 @@ class DemoSkill(NeonSkill):
         """
         # TODO: Add a check for plugin availability here to validate config
         return self.settings.get("demo_tts_engine",
-                                 "neon_tts_plugin_audiofiles") or \
+                                 "neon-tts-plugin-audiofiles") or \
             self.config_core["tts"].get("fallback_module")
 
     @property
