@@ -12,7 +12,7 @@
     "systemDeps": false,
     "requirements": {
         "python": [
-            "neon_tts_plugin_audiofiles @ git+https://github.com/neongeckocom/neon-tts-plugin-audiofiles@FEAT_DebugUnresolvedAudioFiles",
+            "neon_tts_plugin_audiofiles>=0.0.2a5",
             "neon_utils~=1.0"
         ],
         "system": {},
