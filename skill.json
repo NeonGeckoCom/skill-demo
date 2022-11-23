@@ -1,6 +1,6 @@
 {
     "title": "Demo",
-    "url": "https://github.com/NeonDmitry/skill-demo",
+    "url": "https://github.com/NeonGeckoCom/skill-demo",
     "summary": "Skill to demo Neon capabilities",
     "short_description": "Skill to demo Neon capabilities",
     "description": "The demo skill will prompt on first run if you'd like to see a demo. User may accept or decline and optionally choose to be asked again on next run. The demo may also be run at any time via intent.",
@@ -12,7 +12,7 @@
     "systemDeps": false,
     "requirements": {
         "python": [
-            "neon_tts_plugin_audiofiles",
+            "neon_tts_plugin_audiofiles>=0.0.2a5",
             "neon_utils~=1.0"
         ],
         "system": {},
@@ -43,6 +43,6 @@
         "NeonGeckoCom"
     ],
     "skillname": "skill-demo",
-    "authorname": "NeonDmitry",
+    "authorname": "NeonGeckoCom",
     "foldername": null
 }

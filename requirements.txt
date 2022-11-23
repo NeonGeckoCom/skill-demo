@@ -1,2 +1,2 @@
 neon_utils~=1.0
-neon_tts_plugin_audiofiles
+neon_tts_plugin_audiofiles>=0.0.2a5

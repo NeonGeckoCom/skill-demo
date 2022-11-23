@@ -165,14 +165,17 @@ class DemoSkill(NeonSkill):
             if self._active_demos[user].is_set():
                 # Check to stop before speaking the prompt
                 break
-            self._speak_prompt(prompt, prompter, tts)
-            if self._active_demos[user].is_set():
-                # Check to stop before executing the prompt
-                break
-            LOG.info(message.context['user_profiles'][0]['units']['measure'])
-            message.data = {"lang": lang,
-                            "utterances": [prompt.lower()]}
-            self._send_prompt(message)
+            try:
+                self._speak_prompt(prompt, prompter, tts)
+                if self._active_demos[user].is_set():
+                    # Check to stop before executing the prompt
+                    break
+                LOG.info(message.context['user_profiles'][0]['units']['measure'])
+                message.data = {"lang": lang,
+                                "utterances": [prompt.lower()]}
+                self._send_prompt(message)
+            except Exception as e:
+                LOG.exception(e)
 
         self.speak_dialog("finished_demo", message=original_message)
         self._active_demos.pop(user)
@@ -245,10 +248,12 @@ class DemoSkill(NeonSkill):
         Create a TTS plugin instance to
         """
         from ovos_plugin_manager.tts import OVOSTTSFactory
-        engine = self.demo_tts_plugin
-        lang = lang or self.lang
-        config = {"module": engine,
-                  "lang": lang}
+
+        # Get TTS config with lang and module overrides from skill
+        config = self.config_core.get('tts')
+        config['module'] = self.demo_tts_plugin
+        config['lang'] = lang or self.lang
+
         try:
             return OVOSTTSFactory.create(config)
         except Exception as e:
