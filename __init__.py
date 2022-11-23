@@ -248,10 +248,12 @@ class DemoSkill(NeonSkill):
         Create a TTS plugin instance to
         """
         from ovos_plugin_manager.tts import OVOSTTSFactory
-        engine = self.demo_tts_plugin
-        lang = lang or self.lang
-        config = {"module": engine,
-                  "lang": lang}
+
+        # Get TTS config with lang and module overrides from skill
+        config = self.config_core.get('tts')
+        config['module'] = self.demo_tts_plugin
+        config['lang'] = lang or self.lang
+
         try:
             return OVOSTTSFactory.create(config)
         except Exception as e:
