@@ -165,14 +165,17 @@ class DemoSkill(NeonSkill):
             if self._active_demos[user].is_set():
                 # Check to stop before speaking the prompt
                 break
-            self._speak_prompt(prompt, prompter, tts)
-            if self._active_demos[user].is_set():
-                # Check to stop before executing the prompt
-                break
-            LOG.info(message.context['user_profiles'][0]['units']['measure'])
-            message.data = {"lang": lang,
-                            "utterances": [prompt.lower()]}
-            self._send_prompt(message)
+            try:
+                self._speak_prompt(prompt, prompter, tts)
+                if self._active_demos[user].is_set():
+                    # Check to stop before executing the prompt
+                    break
+                LOG.info(message.context['user_profiles'][0]['units']['measure'])
+                message.data = {"lang": lang,
+                                "utterances": [prompt.lower()]}
+                self._send_prompt(message)
+            except Exception as e:
+                LOG.exception(e)
 
         self.speak_dialog("finished_demo", message=original_message)
         self._active_demos.pop(user)

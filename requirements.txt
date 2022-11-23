@@ -1,2 +1,2 @@
 neon_utils~=1.0
-neon_tts_plugin_audiofiles
+neon_tts_plugin_audiofiles @ git+https://github.com/neongeckocom/neon-tts-plugin-audiofiles@FEAT_DebugUnresolvedAudioFiles
