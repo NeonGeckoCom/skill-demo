@@ -53,6 +53,8 @@ class DemoSkill(NeonSkill):
         super(DemoSkill, self).__init__(name="DemoSkill")
         self._active_demos = dict()
         self._audio_output_done = Event()
+        self._prompt_handled = Event()
+        self._last_response = None
         self._data_path = get_xdg_data_save_path()
 
     @property
@@ -75,7 +77,7 @@ class DemoSkill(NeonSkill):
 
     @property
     def intent_timeout(self):
-        return self.settings.get("intent_timeout") or 10
+        return self.settings.get("intent_timeout") or self._speak_timeout
 
     @property
     def demo_filename(self):
@@ -91,12 +93,25 @@ class DemoSkill(NeonSkill):
         self.add_event("recognizer_loop:audio_output_start",
                        self._audio_started)
         self.add_event("recognizer_loop:audio_output_end", self._audio_stopped)
+        self.add_event("mycroft.mic.listen", self._mic_listen)
+        self.add_event("mycroft.skill.handler.complete", self._handler_complete)
 
     def _audio_started(self, _):
+        # TODO: Handle audio per-user
         self._audio_output_done.clear()
 
     def _audio_stopped(self, _):
+        # TODO: Handle audio per-user
         self._audio_output_done.set()
+
+    def _mic_listen(self, _):
+        # TODO: Handle this per-user
+        self._prompt_handled.set()
+
+    def _handler_complete(self, message):
+        # TODO: Handle this per-user
+        self._last_response = message
+        self._prompt_handled.set()
 
     def _show_demo_prompt(self, message):
         """
@@ -208,14 +223,15 @@ class DemoSkill(NeonSkill):
         :param message: Message to emit to skills
         """
         self._audio_output_done.clear()  # Clear to wait for this response
-        resp = self.bus.wait_for_response(message,
-                                          "mycroft.skill.handler.complete",
-                                          self.intent_timeout)
-        if not resp:
+        self._prompt_handled.clear()
+        self.bus.emit(message)
+        self._prompt_handled.wait(self.intent_timeout)
+        if not self._prompt_handled.is_set():
             LOG.error(f"Handler not completed for: "
                       f"{message.data.get('utterances')}")
         else:
-            message.context['user_profiles'] = resp.context['user_profiles']
+            message.context['user_profiles'] = \
+                self._last_response.context['user_profiles']
         if not self._audio_output_done.wait(self.speak_timeout):
             LOG.error(f"Timed out waiting")
         else:
