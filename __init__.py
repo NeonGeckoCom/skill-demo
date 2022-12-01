@@ -266,18 +266,19 @@ class DemoSkill(NeonSkill):
         from ovos_plugin_manager.tts import OVOSTTSFactory
 
         # Get TTS config with lang and module overrides from skill
-        config = self.config_core.get('tts')
+        config = dict(self.config_core.get('tts'))
         config['module'] = self.demo_tts_plugin
         config['lang'] = lang or self.lang
 
         try:
+            LOG.debug(f'Creating TTS with config={config}')
             return OVOSTTSFactory.create(config)
         except Exception as e:
             LOG.error(f"Failed to load TTS Plugin: {self.demo_tts_plugin}")
             LOG.error(e)
         try:
-            LOG.info("Trying with configured fallback_module")
             config['module'] = self.config_core["tts"].get("fallback_module")
+            LOG.info(f"Trying with configured fallback_module {config['module']}")
             return OVOSTTSFactory.create(config)
         except Exception as e:
             LOG.error(f"Failed to load TTS Plugin: {self.demo_tts_plugin}")
@@ -292,6 +293,7 @@ class DemoSkill(NeonSkill):
         if user and user in self._active_demos:
             LOG.info(f"{user} requested stop")
             self._active_demos[user].set()
+            self._prompt_handled.set()
 
 
 def create_skill():
