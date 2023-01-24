@@ -14,7 +14,7 @@
         "python": [
             "neon_tts_plugin_audiofiles~=0.0.2",
             "neon_utils~=1.0",
-            "ovos-plugin-manager>=0.0.21a3"
+            "ovos-plugin-manager~=0.0.21"
         ],
         "system": {},
         "skill": []
