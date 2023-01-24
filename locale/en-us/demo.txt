@@ -1,9 +1,7 @@
-what is your name
-how are you
-what time is it
-what is the temperature
-change my units to metric
-what is the temperature
-what is the capital of Ukraine
-how much caffeine is in Coke
-how do you spell caffeine
+what is your name?
+how are you?
+what time is it?
+what is the temperature?
+what is the capital of Ukraine?
+how much caffeine is in Coke?
+how do you spell caffeine?

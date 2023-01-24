@@ -53,16 +53,23 @@ class DemoSkill(NeonSkill):
         super(DemoSkill, self).__init__(name="DemoSkill")
         self._active_demos = dict()
         self._audio_output_done = Event()
+        self._prompt_handled = Event()
+        self._last_response = None
         self._data_path = get_xdg_data_save_path()
 
     @property
     def demo_tts_plugin(self) -> str:
         """
-        Get the TTS engine spec to use for the demo user
+        Get the TTS engine spec to use for the demo user.
+        TTS Engine is resolved in the order of:
+        1) demo_tts_engine in settings
+        2) audiofiles TTS engine if setting is missing/unset
+        3) configured fallback module if setting is explicitly empty
         """
-        return self.settings.get("demo_tts_engine") or \
-            self.config_core["tts"].get("fallback_module") or \
-            "ovos-tts-plugin-mimic"
+        # TODO: Add a check for plugin availability here to validate config
+        return self.settings.get("demo_tts_engine",
+                                 "neon-tts-plugin-audiofiles") or \
+            self.config_core["tts"].get("fallback_module")
 
     @property
     def speak_timeout(self):
@@ -70,7 +77,7 @@ class DemoSkill(NeonSkill):
 
     @property
     def intent_timeout(self):
-        return self.settings.get("intent_timeout") or 10
+        return self.settings.get("intent_timeout") or self._speak_timeout
 
     @property
     def demo_filename(self):
@@ -86,12 +93,25 @@ class DemoSkill(NeonSkill):
         self.add_event("recognizer_loop:audio_output_start",
                        self._audio_started)
         self.add_event("recognizer_loop:audio_output_end", self._audio_stopped)
+        self.add_event("mycroft.mic.listen", self._mic_listen)
+        self.add_event("mycroft.skill.handler.complete", self._handler_complete)
 
     def _audio_started(self, _):
+        # TODO: Handle audio per-user
         self._audio_output_done.clear()
 
     def _audio_stopped(self, _):
+        # TODO: Handle audio per-user
         self._audio_output_done.set()
+
+    def _mic_listen(self, _):
+        # TODO: Handle this per-user
+        self._prompt_handled.set()
+
+    def _handler_complete(self, message):
+        # TODO: Handle this per-user
+        self._last_response = message
+        self._prompt_handled.set()
 
     def _show_demo_prompt(self, message):
         """
@@ -160,14 +180,17 @@ class DemoSkill(NeonSkill):
             if self._active_demos[user].is_set():
                 # Check to stop before speaking the prompt
                 break
-            self._speak_prompt(prompt, prompter, tts)
-            if self._active_demos[user].is_set():
-                # Check to stop before executing the prompt
-                break
-            LOG.info(message.context['user_profiles'][0]['units']['measure'])
-            message.data = {"lang": lang,
-                            "utterances": [prompt.lower()]}
-            self._send_prompt(message)
+            try:
+                self._speak_prompt(prompt, prompter, tts)
+                if self._active_demos[user].is_set():
+                    # Check to stop before executing the prompt
+                    break
+                LOG.info(message.context['user_profiles'][0]['units']['measure'])
+                message.data = {"lang": lang,
+                                "utterances": [prompt.lower()]}
+                self._send_prompt(message)
+            except Exception as e:
+                LOG.exception(e)
 
         self.speak_dialog("finished_demo", message=original_message)
         self._active_demos.pop(user)
@@ -200,14 +223,15 @@ class DemoSkill(NeonSkill):
         :param message: Message to emit to skills
         """
         self._audio_output_done.clear()  # Clear to wait for this response
-        resp = self.bus.wait_for_response(message,
-                                          "mycroft.skill.handler.complete",
-                                          self.intent_timeout)
-        if not resp:
+        self._prompt_handled.clear()
+        self.bus.emit(message)
+        self._prompt_handled.wait(self.intent_timeout)
+        if not self._prompt_handled.is_set():
             LOG.error(f"Handler not completed for: "
                       f"{message.data.get('utterances')}")
         else:
-            message.context['user_profiles'] = resp.context['user_profiles']
+            message.context['user_profiles'] = \
+                self._last_response.context['user_profiles']
         if not self._audio_output_done.wait(self.speak_timeout):
             LOG.error(f"Timed out waiting")
         else:
@@ -240,18 +264,21 @@ class DemoSkill(NeonSkill):
         Create a TTS plugin instance to
         """
         from ovos_plugin_manager.tts import OVOSTTSFactory
-        engine = self.demo_tts_plugin
-        lang = lang or self.lang
-        config = {"module": engine,
-                  "lang": lang}
+
+        # Get TTS config with lang and module overrides from skill
+        config = dict(self.config_core.get('tts'))
+        config['module'] = self.demo_tts_plugin
+        config['lang'] = lang or self.lang
+
         try:
+            LOG.debug(f'Creating TTS with config={config}')
             return OVOSTTSFactory.create(config)
         except Exception as e:
             LOG.error(f"Failed to load TTS Plugin: {self.demo_tts_plugin}")
             LOG.error(e)
         try:
-            LOG.info("Trying with configured fallback_module")
             config['module'] = self.config_core["tts"].get("fallback_module")
+            LOG.info(f"Trying with configured fallback_module {config['module']}")
             return OVOSTTSFactory.create(config)
         except Exception as e:
             LOG.error(f"Failed to load TTS Plugin: {self.demo_tts_plugin}")
@@ -266,6 +293,7 @@ class DemoSkill(NeonSkill):
         if user and user in self._active_demos:
             LOG.info(f"{user} requested stop")
             self._active_demos[user].set()
+            self._prompt_handled.set()
 
 
 def create_skill():
