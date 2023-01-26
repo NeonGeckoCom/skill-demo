@@ -175,7 +175,7 @@ class TestSkill(unittest.TestCase):
 class TestSkillIntentMatching(unittest.TestCase):
     
     #Import and initialize installed skill
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+    #sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     from skill_demo import DemoSkill
     skill = DemoSkill()
 
