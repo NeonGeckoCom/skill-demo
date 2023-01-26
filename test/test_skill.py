@@ -40,9 +40,6 @@ from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from skill_demo import DemoSkill
-
 
 class TestSkill(unittest.TestCase):
 
@@ -178,6 +175,8 @@ class TestSkill(unittest.TestCase):
 class TestSkillIntentMatching(unittest.TestCase):
     
     #Import and initialize installed skill
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+    from skill_demo import DemoSkill
     skill = DemoSkill()
 
     import yaml
