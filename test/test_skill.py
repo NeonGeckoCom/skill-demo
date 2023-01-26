@@ -40,141 +40,143 @@ from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 
 
-# class TestSkill(unittest.TestCase):
+class TestSkill(unittest.TestCase):
 
-#     @classmethod
-#     def setUpClass(cls) -> None:
-#         from mycroft.skills.skill_loader import SkillLoader
+    @classmethod
+    def setUpClass(cls) -> None:
+        from mycroft.skills.skill_loader import SkillLoader
 
-#         bus = FakeBus()
-#         bus.run_in_thread()
-#         skill_loader = SkillLoader(bus, dirname(dirname(__file__)))
-#         skill_loader.load()
-#         cls.skill = skill_loader.instance
-#         cls.test_fs = join(dirname(__file__), "skill_fs")
-#         if not exists(cls.test_fs):
-#             mkdir(cls.test_fs)
-#         cls.skill.settings_write_path = cls.test_fs
-#         cls.skill.file_system.path = cls.test_fs
-#         cls.skill._init_settings()
-#         cls.skill.initialize()
-#         # Override speak and speak_dialog to test passed arguments
-#         cls.skill.speak = Mock()
-#         cls.skill.speak_dialog = Mock()
+        bus = FakeBus()
+        bus.run_in_thread()
+        skill_loader = SkillLoader(bus, dirname(dirname(__file__)))
+        skill_loader.load()
+        cls.skill = skill_loader.instance
+        cls.test_fs = join(dirname(__file__), "skill_fs")
+        if not exists(cls.test_fs):
+            mkdir(cls.test_fs)
+        cls.skill.settings_write_path = cls.test_fs
+        cls.skill.file_system.path = cls.test_fs
+        cls.skill._init_settings()
+        cls.skill.initialize()
+        # Override speak and speak_dialog to test passed arguments
+        cls.skill.speak = Mock()
+        cls.skill.speak_dialog = Mock()
 
-#     @classmethod
-#     def tearDownClass(cls) -> None:
-#         shutil.rmtree(cls.test_fs)
+    @classmethod
+    def tearDownClass(cls) -> None:
+        shutil.rmtree(cls.test_fs)
 
-#     def test_00_skill_init(self):
-#         # Test any parameters expected to be set in init or initialize methods
-#         from neon_utils.skills import NeonSkill
+    def test_00_skill_init(self):
+        # Test any parameters expected to be set in init or initialize methods
+        from neon_utils.skills import NeonSkill
 
-#         self.assertIsInstance(self.skill, NeonSkill)
-#         self.assertTrue(self.skill.settings["prompt_on_start"])
+        self.assertIsInstance(self.skill, NeonSkill)
+        self.assertTrue(self.skill.settings["prompt_on_start"])
 
-#     def test_skill_show_demo_prompt_no_response(self):
-#         def ask_yesno(dialog):
-#             if dialog == "ask_demo":
-#                 return ""
-#             if dialog == "ask_demo_next_time":
-#                 return ""
+    def test_skill_show_demo_prompt_no_response(self):
+        def ask_yesno(dialog):
+            if dialog == "ask_demo":
+                return ""
+            if dialog == "ask_demo_next_time":
+                return ""
 
-#         default_ask_yesno = self.skill.ask_yesno
-#         self.skill.ask_yesno = ask_yesno
+        default_ask_yesno = self.skill.ask_yesno
+        self.skill.ask_yesno = ask_yesno
 
-#         self.skill._show_demo_prompt(Message("mycroft.ready"))
-#         self.skill.speak_dialog.assert_called_with("confirm_demo_disabled")
-#         self.assertFalse(self.skill.settings["prompt_on_start"])
+        self.skill._show_demo_prompt(Message("mycroft.ready"))
+        self.skill.speak_dialog.assert_called_with("confirm_demo_disabled")
+        self.assertFalse(self.skill.settings["prompt_on_start"])
 
-#         self.skill.ask_yesno = default_ask_yesno
+        self.skill.ask_yesno = default_ask_yesno
 
-#     def test_skill_show_demo_prompt_no_demo_no_response(self):
-#         def ask_yesno(dialog):
-#             if dialog == "ask_demo":
-#                 return "no"
-#             if dialog == "ask_demo_next_time":
-#                 return ""
+    def test_skill_show_demo_prompt_no_demo_no_response(self):
+        def ask_yesno(dialog):
+            if dialog == "ask_demo":
+                return "no"
+            if dialog == "ask_demo_next_time":
+                return ""
 
-#         default_ask_yesno = self.skill.ask_yesno
-#         self.skill.ask_yesno = ask_yesno
+        default_ask_yesno = self.skill.ask_yesno
+        self.skill.ask_yesno = ask_yesno
 
-#         self.skill._show_demo_prompt(Message("mycroft.ready"))
-#         self.skill.speak_dialog.assert_called_with("confirm_demo_disabled")
-#         self.assertFalse(self.skill.settings["prompt_on_start"])
+        self.skill._show_demo_prompt(Message("mycroft.ready"))
+        self.skill.speak_dialog.assert_called_with("confirm_demo_disabled")
+        self.assertFalse(self.skill.settings["prompt_on_start"])
 
-#         self.skill.ask_yesno = default_ask_yesno
+        self.skill.ask_yesno = default_ask_yesno
 
-#     def test_skill_show_demo_prompt_no_demo_no_next_time(self):
-#         def ask_yesno(dialog):
-#             if dialog == "ask_demo":
-#                 return "no"
-#             if dialog == "ask_demo_next_time":
-#                 return "no"
+    def test_skill_show_demo_prompt_no_demo_no_next_time(self):
+        def ask_yesno(dialog):
+            if dialog == "ask_demo":
+                return "no"
+            if dialog == "ask_demo_next_time":
+                return "no"
 
-#         default_ask_yesno = self.skill.ask_yesno
-#         self.skill.ask_yesno = ask_yesno
+        default_ask_yesno = self.skill.ask_yesno
+        self.skill.ask_yesno = ask_yesno
 
-#         self.skill._show_demo_prompt(Message("mycroft.ready"))
-#         self.skill.speak_dialog.assert_called_with("confirm_demo_disabled")
-#         self.assertFalse(self.skill.settings["prompt_on_start"])
+        self.skill._show_demo_prompt(Message("mycroft.ready"))
+        self.skill.speak_dialog.assert_called_with("confirm_demo_disabled")
+        self.assertFalse(self.skill.settings["prompt_on_start"])
 
-#         self.skill.ask_yesno = default_ask_yesno
+        self.skill.ask_yesno = default_ask_yesno
 
-#     def test_skill_show_demo_prompt_no_demo_yes_next_time(self):
-#         def ask_yesno(dialog):
-#             if dialog == "ask_demo":
-#                 return "no"
-#             if dialog == "ask_demo_next_time":
-#                 return "yes"
+    def test_skill_show_demo_prompt_no_demo_yes_next_time(self):
+        def ask_yesno(dialog):
+            if dialog == "ask_demo":
+                return "no"
+            if dialog == "ask_demo_next_time":
+                return "yes"
 
-#         default_ask_yesno = self.skill.ask_yesno
-#         self.skill.ask_yesno = ask_yesno
+        default_ask_yesno = self.skill.ask_yesno
+        self.skill.ask_yesno = ask_yesno
 
-#         self.skill._show_demo_prompt(Message("mycroft.ready"))
-#         self.skill.speak_dialog.assert_called_with("confirm_demo_enabled")
-#         self.assertTrue(self.skill.settings["prompt_on_start"])
+        self.skill._show_demo_prompt(Message("mycroft.ready"))
+        self.skill.speak_dialog.assert_called_with("confirm_demo_enabled")
+        self.assertTrue(self.skill.settings["prompt_on_start"])
 
-#         self.skill.ask_yesno = default_ask_yesno
+        self.skill.ask_yesno = default_ask_yesno
 
-#     def test_skill_show_demo_prompt_yes_demo(self):
-#         def ask_yesno(dialog):
-#             if dialog == "ask_demo":
-#                 return "yes"
-#             if dialog == "ask_demo_next_time":
-#                 return "yes"
+    def test_skill_show_demo_prompt_yes_demo(self):
+        def ask_yesno(dialog):
+            if dialog == "ask_demo":
+                return "yes"
+            if dialog == "ask_demo_next_time":
+                return "yes"
 
-#         default_ask_yesno = self.skill.ask_yesno
-#         self.skill.ask_yesno = ask_yesno
+        default_ask_yesno = self.skill.ask_yesno
+        self.skill.ask_yesno = ask_yesno
 
-#         default_handle_show_demo = self.skill.handle_show_demo
-#         self.skill.handle_show_demo = Mock()
+        default_handle_show_demo = self.skill.handle_show_demo
+        self.skill.handle_show_demo = Mock()
 
-#         message = Message("mycroft.ready",
-#                           context={"neon_should_respond": True})
-#         self.skill._show_demo_prompt(message)
-#         self.skill.handle_show_demo.assert_called_with(message)
-#         self.assertFalse(self.skill.settings["prompt_on_start"])
+        message = Message("mycroft.ready",
+                          context={"neon_should_respond": True})
+        self.skill._show_demo_prompt(message)
+        self.skill.handle_show_demo.assert_called_with(message)
+        self.assertFalse(self.skill.settings["prompt_on_start"])
 
-#         self.skill.ask_yesno = default_ask_yesno
-#         self.skill.handle_show_demo = default_handle_show_demo
+        self.skill.ask_yesno = default_ask_yesno
+        self.skill.handle_show_demo = default_handle_show_demo
 
-#     def test_show_demo_valid(self):
-#         self.skill._speak_prompt = Mock()
-#         self.skill._send_prompt = Mock()
-#         msg = Message("recognizer_loop:utterance",
-#                       context={"neon_should_respond": True})
-#         self.skill.handle_show_demo(msg)
-#         self.skill.speak_dialog.assert_any_call("starting_demo")
-#         args = self.skill.speak_dialog.call_args
-#         self.assertEqual(args[0][0], "finished_demo")
+    def test_show_demo_valid(self):
+        self.skill._speak_prompt = Mock()
+        self.skill._send_prompt = Mock()
+        msg = Message("recognizer_loop:utterance",
+                      context={"neon_should_respond": True})
+        self.skill.handle_show_demo(msg)
+        self.skill.speak_dialog.assert_any_call("starting_demo")
+        args = self.skill.speak_dialog.call_args
+        self.assertEqual(args[0][0], "finished_demo")
 
-#     # TODO: Implement tests for _get_demo_tts, _send_prompt, and _speak_prompt
+    # TODO: Implement tests for _get_demo_tts, _send_prompt, and _speak_prompt
 
 class TestSkillIntentMatching(unittest.TestCase):
-    # Import and initialize installed skill
+    
+    #Import and initialize installed skill
     from skill_demo import DemoSkill
     skill = DemoSkill()
+
     import yaml
     test_intents = join(dirname(__file__), 'test_intents.yaml')
     with open(test_intents) as f:
