@@ -34,7 +34,9 @@ from time import sleep
 from typing import Optional
 
 from mycroft_bus_client import Message
-from neon_utils import LOG
+from ovos_utils import classproperty
+from ovos_utils.log import LOG
+from ovos_utils.process_utils import RuntimeRequirements
 from neon_utils.message_utils import get_message_user, dig_for_message
 from neon_utils.signal_utils import wait_for_signal_clear
 from neon_utils.skills import NeonSkill
@@ -56,6 +58,18 @@ class DemoSkill(NeonSkill):
         self._prompt_handled = Event()
         self._last_response = None
         self._data_path = get_xdg_data_save_path()
+
+    @classproperty
+    def runtime_requirements(self):
+        return RuntimeRequirements(network_before_load=False,
+                                   internet_before_load=False,
+                                   gui_before_load=False,
+                                   requires_internet=False,
+                                   requires_network=False,
+                                   requires_gui=False,
+                                   no_internet_fallback=True,
+                                   no_network_fallback=True,
+                                   no_gui_fallback=True)
 
     @property
     def demo_tts_plugin(self) -> str:
