@@ -172,6 +172,6 @@ class TestSkill(unittest.TestCase):
 
     # TODO: Implement tests for _get_demo_tts, _send_prompt, and _speak_prompt
 
-                    
+
 if __name__ == '__main__':
     pytest.main()
