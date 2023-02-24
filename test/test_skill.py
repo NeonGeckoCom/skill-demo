@@ -38,6 +38,7 @@ from os.path import dirname, join, exists
 from mock import Mock
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
+import sys
 
 
 class TestSkill(unittest.TestCase):
