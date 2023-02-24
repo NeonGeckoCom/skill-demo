@@ -1,0 +1,25 @@
+# Specify resources to test here.
+
+# Specify languages to be tested
+languages:
+  - "en-us"
+
+# vocab is lowercase .voc file basenames
+vocab: []
+
+# dialog is .dialog file basenames (case-sensitive)
+dialog:
+  - ask_demo
+  - ask_demo_next_time
+  - confirm_demo_disabled
+  - confirm_demo_enabled
+  - finished_demo
+  - starting_demo
+# regex entities, not necessarily filenames
+regex: []
+intents:
+  # Padatious intents are the `.intent` file names
+  padatious:
+    - show_demo.intent
+  # Adapt intents are the name passed to the constructor
+  adapt: []
