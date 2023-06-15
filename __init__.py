@@ -51,8 +51,8 @@ from mycroft.skills.skill_data import find_resource
 
 
 class DemoSkill(NeonSkill):
-    def __init__(self):
-        super(DemoSkill, self).__init__(name="DemoSkill")
+    def __init__(self, **kwargs):
+        super(DemoSkill, self).__init__(**kwargs)
         self._active_demos = dict()
         self._audio_output_done = Event()
         self._prompt_handled = Event()
@@ -308,7 +308,3 @@ class DemoSkill(NeonSkill):
             LOG.info(f"{user} requested stop")
             self._active_demos[user].set()
             self._prompt_handled.set()
-
-
-def create_skill():
-    return DemoSkill()
