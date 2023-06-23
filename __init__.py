@@ -52,7 +52,7 @@ from mycroft.skills.skill_data import find_resource
 
 class DemoSkill(NeonSkill):
     def __init__(self, **kwargs):
-        super(DemoSkill, self).__init__(**kwargs)
+        NeonSkill.__init__(self, **kwargs)
         self._active_demos = dict()
         self._audio_output_done = Event()
         self._prompt_handled = Event()
