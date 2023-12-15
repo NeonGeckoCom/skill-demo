@@ -45,9 +45,8 @@ from neon_utils.file_utils import load_commented_file
 from ovos_config.locations import get_xdg_data_save_path
 from ovos_plugin_manager.templates import TTS
 from ovos_utils.sound import play_wav
-
-from mycroft.skills import intent_file_handler
-from mycroft.skills.skill_data import find_resource
+from ovos_workshop.decorators import intent_file_handler
+from ovos_workshop.resource_files import find_resource
 
 
 class DemoSkill(NeonSkill):
@@ -99,6 +98,10 @@ class DemoSkill(NeonSkill):
         Get the name of the demo text resource file (including extension)
         """
         return self.settings.get("filename") or "demo.txt"
+
+    @property
+    def prompt_on_start(self):
+        return self.settings.get("prompt_on_start", True)
 
     def initialize(self):
         # When demo prompt enabled, wait for load and prompt user
