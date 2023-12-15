@@ -39,7 +39,7 @@ class TestSkill(SkillTestCase):
         from neon_utils.skills import NeonSkill
 
         self.assertIsInstance(self.skill, NeonSkill)
-        self.assertTrue(self.skill.settings["prompt_on_start"])
+        self.assertTrue(self.skill.prompt_on_start)
 
     def test_skill_show_demo_prompt_no_response(self):
         def ask_yesno(dialog):
@@ -53,8 +53,8 @@ class TestSkill(SkillTestCase):
 
         self.skill._show_demo_prompt(Message("mycroft.ready"))
         self.skill.speak_dialog.assert_called_with("confirm_demo_disabled")
+        self.assertFalse(self.skill.prompt_on_start)
         self.assertFalse(self.skill.settings["prompt_on_start"])
-
         self.skill.ask_yesno = default_ask_yesno
 
     def test_skill_show_demo_prompt_no_demo_no_response(self):
@@ -69,8 +69,8 @@ class TestSkill(SkillTestCase):
 
         self.skill._show_demo_prompt(Message("mycroft.ready"))
         self.skill.speak_dialog.assert_called_with("confirm_demo_disabled")
+        self.assertFalse(self.skill.prompt_on_start)
         self.assertFalse(self.skill.settings["prompt_on_start"])
-
         self.skill.ask_yesno = default_ask_yesno
 
     def test_skill_show_demo_prompt_no_demo_no_next_time(self):
@@ -85,6 +85,7 @@ class TestSkill(SkillTestCase):
 
         self.skill._show_demo_prompt(Message("mycroft.ready"))
         self.skill.speak_dialog.assert_called_with("confirm_demo_disabled")
+        self.assertFalse(self.skill.prompt_on_start)
         self.assertFalse(self.skill.settings["prompt_on_start"])
 
         self.skill.ask_yesno = default_ask_yesno
@@ -101,8 +102,8 @@ class TestSkill(SkillTestCase):
 
         self.skill._show_demo_prompt(Message("mycroft.ready"))
         self.skill.speak_dialog.assert_called_with("confirm_demo_enabled")
+        self.assertTrue(self.skill.prompt_on_start)
         self.assertTrue(self.skill.settings["prompt_on_start"])
-
         self.skill.ask_yesno = default_ask_yesno
 
     def test_skill_show_demo_prompt_yes_demo(self):
@@ -122,6 +123,7 @@ class TestSkill(SkillTestCase):
                           context={"neon_should_respond": True})
         self.skill._show_demo_prompt(message)
         self.skill.handle_show_demo.assert_called_with(message)
+        self.assertFalse(self.skill.prompt_on_start)
         self.assertFalse(self.skill.settings["prompt_on_start"])
 
         self.skill.ask_yesno = default_ask_yesno

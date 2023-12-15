@@ -99,6 +99,10 @@ class DemoSkill(NeonSkill):
         """
         return self.settings.get("filename") or "demo.txt"
 
+    @property
+    def prompt_on_start(self):
+        return self.settings.get("prompt_on_start", True)
+
     def initialize(self):
         # When demo prompt enabled, wait for load and prompt user
         if self.settings.get("prompt_on_start"):
