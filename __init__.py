@@ -45,9 +45,8 @@ from neon_utils.file_utils import load_commented_file
 from ovos_config.locations import get_xdg_data_save_path
 from ovos_plugin_manager.templates import TTS
 from ovos_utils.sound import play_wav
-
-from mycroft.skills import intent_file_handler
-from mycroft.skills.skill_data import find_resource
+from ovos_workshop.decorators import intent_file_handler
+from ovos_workshop.resource_files import find_resource
 
 
 class DemoSkill(NeonSkill):
