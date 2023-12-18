@@ -1,29 +1,24 @@
 # Changelog
 
-## [0.3.1a4](https://github.com/NeonGeckoCom/skill-demo/tree/0.3.1a4) (2023-06-23)
+## [1.0.1a2](https://github.com/NeonGeckoCom/skill-demo/tree/1.0.1a2) (2023-12-15)
 
-[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/0.3.1a3...0.3.1a4)
-
-**Merged pull requests:**
-
-- Update init structure for consistency [\#45](https://github.com/NeonGeckoCom/skill-demo/pull/45) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [0.3.1a3](https://github.com/NeonGeckoCom/skill-demo/tree/0.3.1a3) (2023-06-15)
-
-[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/0.3.1a2...0.3.1a3)
+[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/1.0.1a1...1.0.1a2)
 
 **Merged pull requests:**
 
-- Deprecate `create_skill` method and update `__init__` for best practices [\#44](https://github.com/NeonGeckoCom/skill-demo/pull/44) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update imports and unit tests [\#49](https://github.com/NeonGeckoCom/skill-demo/pull/49) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [0.3.1a2](https://github.com/NeonGeckoCom/skill-demo/tree/0.3.1a2) (2023-06-14)
+## [1.0.1a1](https://github.com/NeonGeckoCom/skill-demo/tree/1.0.1a1) (2023-09-18)
 
-[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/0.3.0...0.3.1a2)
+[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/1.0.0...1.0.1a1)
+
+**Implemented enhancements:**
+
+- \[FEAT\] Ukrainian Intent Tests [\#38](https://github.com/NeonGeckoCom/skill-demo/issues/38)
 
 **Merged pull requests:**
 
-- Update GH automation to best practices [\#43](https://github.com/NeonGeckoCom/skill-demo/pull/43) ([NeonDaniel](https://github.com/NeonDaniel))
-- Refactor mycroft-messagebus-client to ovos-bus-client [\#41](https://github.com/NeonGeckoCom/skill-demo/pull/41) ([NeonDaniel](https://github.com/NeonDaniel))
+- Add Ukrainian Intent Tests [\#48](https://github.com/NeonGeckoCom/skill-demo/pull/48) ([NeonDmitry](https://github.com/NeonDmitry))
 
 
 
