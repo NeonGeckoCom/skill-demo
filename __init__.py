@@ -45,7 +45,7 @@ from neon_utils.file_utils import load_commented_file
 from ovos_config.locations import get_xdg_data_save_path
 from ovos_plugin_manager.templates import TTS
 from ovos_utils.sound import play_wav
-from ovos_workshop.decorators import intent_file_handler
+from ovos_workshop.decorators import intent_handler
 from ovos_workshop.resource_files import find_resource
 
 
@@ -154,7 +154,7 @@ class DemoSkill(NeonSkill):
             self.speak_dialog("confirm_demo_disabled")
         self.update_skill_settings({"prompt_on_start": False})
 
-    @intent_file_handler("show_demo.intent")
+    @intent_handler("show_demo.intent")
     def handle_show_demo(self, message):
         """
         Starts a brief demo
