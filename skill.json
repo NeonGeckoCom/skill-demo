@@ -16,7 +16,7 @@
             "neon-utils~=1.0,>=1.2.2",
             "ovos-bus-client~=0.0.3",
             "ovos-plugin-manager~=0.0.21",
-            "ovos-utils~=0.0.28"
+            "ovos-utils~=0.0, >=0.0.28"
         ],
         "system": {},
         "skill": []
