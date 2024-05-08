@@ -58,6 +58,17 @@ class DemoSkill(NeonSkill):
         self._last_response = None
         self._data_path = get_xdg_data_save_path()
 
+        # When demo prompt enabled, wait for load and prompt user
+        if self.prompt_on_start:
+            self.add_event('mycroft.ready', self._show_demo_prompt)
+        self.add_event("recognizer_loop:audio_output_start",
+                       self._audio_started)
+        self.add_event("recognizer_loop:audio_output_end",
+                       self._audio_stopped)
+        self.add_event("mycroft.mic.listen", self._mic_listen)
+        self.add_event("mycroft.skill.handler.complete",
+                       self._handler_complete)
+
     @classproperty
     def runtime_requirements(self):
         return RuntimeRequirements(network_before_load=False,
@@ -102,16 +113,6 @@ class DemoSkill(NeonSkill):
     @property
     def prompt_on_start(self):
         return self.settings.get("prompt_on_start", True)
-
-    def initialize(self):
-        # When demo prompt enabled, wait for load and prompt user
-        if self.prompt_on_start:
-            self.add_event('mycroft.ready', self._show_demo_prompt)
-        self.add_event("recognizer_loop:audio_output_start",
-                       self._audio_started)
-        self.add_event("recognizer_loop:audio_output_end", self._audio_stopped)
-        self.add_event("mycroft.mic.listen", self._mic_listen)
-        self.add_event("mycroft.skill.handler.complete", self._handler_complete)
 
     def _audio_started(self, _):
         # TODO: Handle audio per-user

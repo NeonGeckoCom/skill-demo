@@ -1,4 +1,4 @@
-neon-utils~=1.0,>=1.2.2
+neon-utils~=1.8
 neon-tts-plugin-audiofiles~=0.0.2
 ovos-plugin-manager~=0.0.21
 ovos-utils~=0.0, >=0.0.28
