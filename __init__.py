@@ -44,7 +44,7 @@ from neon_utils.user_utils import get_user_prefs
 from neon_utils.file_utils import load_commented_file
 from ovos_config.locations import get_xdg_data_save_path
 from ovos_plugin_manager.templates import TTS
-from ovos_utils.sound import play_wav
+from ovos_utils.sound import play_audio
 from ovos_workshop.decorators import intent_handler
 from ovos_workshop.resource_files import find_resource
 
@@ -57,6 +57,17 @@ class DemoSkill(NeonSkill):
         self._prompt_handled = Event()
         self._last_response = None
         self._data_path = get_xdg_data_save_path()
+
+        # When demo prompt enabled, wait for load and prompt user
+        if self.prompt_on_start:
+            self.add_event('mycroft.ready', self._show_demo_prompt)
+        self.add_event("recognizer_loop:audio_output_start",
+                       self._audio_started)
+        self.add_event("recognizer_loop:audio_output_end",
+                       self._audio_stopped)
+        self.add_event("mycroft.mic.listen", self._mic_listen)
+        self.add_event("mycroft.skill.handler.complete",
+                       self._handler_complete)
 
     @classproperty
     def runtime_requirements(self):
@@ -102,16 +113,6 @@ class DemoSkill(NeonSkill):
     @property
     def prompt_on_start(self):
         return self.settings.get("prompt_on_start", True)
-
-    def initialize(self):
-        # When demo prompt enabled, wait for load and prompt user
-        if self.settings.get("prompt_on_start"):
-            self.bus.once('mycroft.ready', self._show_demo_prompt)
-        self.add_event("recognizer_loop:audio_output_start",
-                       self._audio_started)
-        self.add_event("recognizer_loop:audio_output_end", self._audio_stopped)
-        self.add_event("mycroft.mic.listen", self._mic_listen)
-        self.add_event("mycroft.skill.handler.complete", self._handler_complete)
 
     def _audio_started(self, _):
         # TODO: Handle audio per-user
@@ -267,9 +268,8 @@ class DemoSkill(NeonSkill):
             # If available, use skill-managed TTS
             _, output_file = mkstemp()
             wav_file, _ = tts.get_tts(prompt, output_file)
-            # TODO: If server, self.send_with_audio
-            play_wav(wav_file,
-                     self.config_core.get("play_wav_cmdline")).wait(
+            play_audio(wav_file,
+                       self.config_core.get("play_wav_cmdline")).wait(
                 self.speak_timeout)
         else:
             # Else fallback to audio module (probably same voice
