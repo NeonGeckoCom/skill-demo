@@ -1,32 +1,12 @@
 # Changelog
 
-## [1.0.2a1](https://github.com/NeonGeckoCom/skill-demo/tree/1.0.2a1) (2023-12-19)
+## [1.0.3a1](https://github.com/NeonGeckoCom/skill-demo/tree/1.0.3a1) (2024-05-08)
 
-[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/1.0.1a2...1.0.2a1)
-
-**Merged pull requests:**
-
-- Refactor to remove deprecated reference [\#51](https://github.com/NeonGeckoCom/skill-demo/pull/51) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.0.1a2](https://github.com/NeonGeckoCom/skill-demo/tree/1.0.1a2) (2023-12-15)
-
-[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/1.0.1a1...1.0.1a2)
+[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/1.0.2...1.0.3a1)
 
 **Merged pull requests:**
 
-- Update imports and unit tests [\#49](https://github.com/NeonGeckoCom/skill-demo/pull/49) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.0.1a1](https://github.com/NeonGeckoCom/skill-demo/tree/1.0.1a1) (2023-09-18)
-
-[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/1.0.0...1.0.1a1)
-
-**Implemented enhancements:**
-
-- \[FEAT\] Ukrainian Intent Tests [\#38](https://github.com/NeonGeckoCom/skill-demo/issues/38)
-
-**Merged pull requests:**
-
-- Add Ukrainian Intent Tests [\#48](https://github.com/NeonGeckoCom/skill-demo/pull/48) ([NeonDmitry](https://github.com/NeonDmitry))
+- Support ovos-utils 0.1 [\#53](https://github.com/NeonGeckoCom/skill-demo/pull/53) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
