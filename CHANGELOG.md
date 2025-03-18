@@ -1,12 +1,20 @@
 # Changelog
 
-## [1.0.3a1](https://github.com/NeonGeckoCom/skill-demo/tree/1.0.3a1) (2024-05-08)
+## [1.0.4a2](https://github.com/NeonGeckoCom/skill-demo/tree/1.0.4a2) (2025-03-11)
 
-[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/1.0.2...1.0.3a1)
+[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/1.0.4a1...1.0.4a2)
 
 **Merged pull requests:**
 
-- Support ovos-utils 0.1 [\#53](https://github.com/NeonGeckoCom/skill-demo/pull/53) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update automation, gitignore, and license notices [\#57](https://github.com/NeonGeckoCom/skill-demo/pull/57) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.0.4a1](https://github.com/NeonGeckoCom/skill-demo/tree/1.0.4a1) (2024-09-13)
+
+[Full Changelog](https://github.com/NeonGeckoCom/skill-demo/compare/1.0.3...1.0.4a1)
+
+**Merged pull requests:**
+
+- Update OVOS dependencies [\#56](https://github.com/NeonGeckoCom/skill-demo/pull/56) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
